@@ -104,7 +104,7 @@ export default function Component() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
       <motion.div
-        className="absolute inset-0 bg-purple-900/20 rounded-full filter blur-3xl"
+        className="absolute inset-0 bg-purple-900/20 rounded-xl filter blur-3xl"
         animate={{ scale: heartbeatScale }}
         transition={{ duration: 0.5, ease: "easeInOut" }}
       />
@@ -147,12 +147,12 @@ export default function Component() {
                 {boostModes.map((mode) => (
                   <motion.button
                     key={mode.value}
-                    className={`p-2 rounded-md flex items-center justify-center text-sm ${
+                    className={`p-2 rounded-xl flex items-center justify-center text-sm ${
                       boostMode === mode.value
                         ? "bg-purple-600 text-white"
                         : "bg-gray-800 text-gray-400"
                     }`}
-                    whileHover={{ scale: 1.05, backgroundColor: "#4C1D95" }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setBoostMode(mode.value)}
                   >
@@ -222,7 +222,7 @@ export default function Component() {
 
             <div className="flex space-x-4">
               <motion.button
-                className="flex-1 p-3 rounded-md bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-lg shadow-lg"
+                className="flex-1 p-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-lg shadow-lg"
                 whileHover={{
                   scale: 1.05,
                   boxShadow: "0 0 20px rgba(167, 139, 250, 0.4)",
@@ -246,7 +246,7 @@ export default function Component() {
                 )}
               </motion.button>
               <motion.button
-                className="p-3 rounded-md bg-gray-700 text-white font-bold text-lg shadow-lg"
+                className="p-3 rounded-xl bg-gray-700 text-white font-bold text-lg shadow-lg"
                 whileHover={{ scale: 1.05, backgroundColor: "#374151" }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleReset}
