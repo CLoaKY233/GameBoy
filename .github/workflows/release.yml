@@ -4,6 +4,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write # Add this line for release permissions
+
 jobs:
   build-tauri:
     strategy:
@@ -21,23 +24,17 @@ jobs:
           node-version: 20
 
       - name: Setup Python
-        uses: actions/setup-python@v5 # Updated to v5
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-          cache: "pip" # Enables pip caching
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Install frontend dependencies
-        run: npm ci # Using ci instead of install for cleaner installs
+        run: npm ci
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
@@ -47,12 +44,17 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Boostify ${{ github.ref_name }}"
           releaseBody: |
-            See the assets to download and install this version.
+            Boostify v1.0.0 - System Power Optimization Tool
 
-            **Changes in this release:**
-            - Initial release of Boostify
-            - Power optimization features
-            - Boost mode control
-            - Processor state management
+            **Features:**
+            - Advanced processor boost mode control
+            - Maximum processor state management
+            - AC/DC power profile switching
+            - Real-time power optimization
+            - User-friendly interface
+
+            **Requirements:**
+            - Windows 10/11
+            - Administrator privileges for power management
           releaseDraft: true
           prerelease: false
