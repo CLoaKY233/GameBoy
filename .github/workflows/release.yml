@@ -15,34 +15,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Rust (Stable)
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Python
-        uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5 # Updated to v5
         with:
           python-version: "3.x"
+          cache: "pip" # Enables pip caching
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install dependencies (npm)
-        run: npm install
+      - name: Install frontend dependencies
+        run: npm ci # Using ci instead of install for cleaner installs
 
-      - name: Build the app
+      - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Boostify ${{ github.ref_name }}"
-          releaseBody: "See assets to download and install this version."
+          releaseBody: |
+            See the assets to download and install this version.
+
+            **Changes in this release:**
+            - Initial release of Boostify
+            - Power optimization features
+            - Boost mode control
+            - Processor state management
           releaseDraft: true
           prerelease: false
