@@ -67,9 +67,9 @@ export default function Component() {
     setIsOptimizing(true);
     try {
       const result = await invoke("switcher", {
-        alpha: boostMode.toString(),
-        beta: maxProcessorState.toString(),
-        gamma: powerMode.toLowerCase(),
+        boostMode: boostMode.toString(),
+        maxProcessorState: maxProcessorState.toString(),
+        powerType: powerMode.toLowerCase(),
       });
 
       // Check if the result contains error keywords

@@ -5,7 +5,7 @@ on:
       - "v*"
 
 permissions:
-  contents: write # Add this line for release permissions
+  contents: write
 
 jobs:
   build-tauri:
@@ -23,23 +23,24 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Setup Rust
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           components: clippy
 
-      - name: Install frontend dependencies
-        run: npm ci
+      - name: Install dependencies (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: |
+          npm ci
+          rustup target add x86_64-pc-windows-msvc
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Boostify ${{ github.ref_name }}"
@@ -56,5 +57,19 @@ jobs:
             **Requirements:**
             - Windows 10/11
             - Administrator privileges for power management
+
+            **Changes in this version:**
+            - Migrated to pure Rust implementation
+            - Improved error handling
+            - Better performance and stability
+            - Enhanced security
           releaseDraft: true
           prerelease: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-bundle
+          path: |
+            src-tauri/target/release/bundle/msi/*
+            src-tauri/target/release/bundle/nsis/*
