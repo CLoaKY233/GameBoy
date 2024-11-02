@@ -45,7 +45,7 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Boostify ${{ github.ref_name }}"
           releaseBody: |
-            Boostify v1.0.0 - System Power Optimization Tool
+            Boostify v1.1.0 - System Power Optimization Tool
 
             **Features:**
             - Advanced processor boost mode control
