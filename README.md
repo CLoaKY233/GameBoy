@@ -6,24 +6,26 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Made with Tauri](https://img.shields.io/badge/Made%20with-Tauri-purple.svg)](https://tauri.app/)
+[![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 
-Boostify is a powerful desktop application built with Tauri that provides granular control over your system's power management and processor optimization settings. With an intuitive interface and powerful backend, it allows users to fine-tune their system's performance according to their needs.
+Boostify is a high-performance desktop application built with Tauri and Rust that provides precise control over system power management and processor optimization settings. The application leverages native Windows power management capabilities through direct Rust implementation.
 
 ## 🚀 Features
 
-- **Advanced Power Management**: Control processor boost modes and states
-- **Dual Power Profiles**: Separate settings for AC and DC power modes
-- **Real-time Updates**: Instant application of power settings
-- **User-Friendly Interface**: Clean and intuitive UI built with React
-- **Secure Operations**: Elevated privileges handling for system modifications
-- **Visual Feedback**: Real-time status updates and animations
+- **Native Power Management**: Pure Rust implementation for system power control
+- **Processor Optimization**: Advanced boost mode management
+- **Dual Power Profiles**: Seamless AC/DC power mode switching
+- **Secure Operations**: Native privilege elevation handling
+- **Modern Interface**: React-based UI with real-time feedback
+- **Performance Focused**: Low resource footprint with Rust backend
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React, Vite, TailwindCSS, Framer Motion
-- **Backend**: Tauri (Rust), Python
-- **UI Components**: ShadcnUI
+- **Backend**: Rust + Tauri
+- **Frontend**: React, Vite, TailwindCSS
+- **UI Framework**: ShadcnUI
+- **Animations**: Framer Motion
 - **Styling**: TailwindCSS
 - **State Management**: React Hooks
 
@@ -31,9 +33,9 @@ Boostify is a powerful desktop application built with Tauri that provides granul
 
 - Node.js (v16 or higher)
 - Rust (latest stable)
-- Python 3.7+
 - Microsoft Visual Studio C++ Build Tools
-- Windows OS (Currently Windows-only for power management features)
+- Windows 10/11
+- Administrative privileges
 
 ## 🚀 Getting Started
 
@@ -48,12 +50,7 @@ Boostify is a powerful desktop application built with Tauri that provides granul
    npm install
    ```
 
-3. **Set up Python environment**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the development server**
+3. **Run the development server**
    ```bash
    npm run tauri dev
    ```
@@ -64,72 +61,89 @@ Boostify is a powerful desktop application built with Tauri that provides granul
 npm run tauri build
 ```
 
-The built application will be available in the `src-tauri/target/release` directory.
+Built artifacts will be available in `src-tauri/target/release/bundle/`.
 
 ## 🎯 Roadmap
 
-- [ ] **Web Integration**
-  - User profiles and authentication
-  - Remote control via web interface
-  - Cloud sync of settings
+- [ ] **Enhanced Power Profiles**
+  - Custom power scheme creation
+  - Temperature-based optimization
+  - Automated profile switching
 
-- [ ] **Gaming Optimizations**
-  - Game-specific profiles
-  - Performance monitoring
-  - Automatic mode switching
+- [ ] **Performance Analytics**
+  - Real-time power consumption monitoring
+  - System performance metrics
+  - Temperature tracking
 
-- [ ] **Analytics Dashboard**
-  - Performance metrics
-  - Power consumption statistics
-  - Temperature monitoring
-
-- [ ] **Community Features**
-  - Profile sharing
-  - Optimization presets
-  - User recommendations
+- [ ] **Advanced Features**
+  - Multiple power scheme management
+  - Scheduled profile switching
+  - Export/Import configurations
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how you can help:
+Contributions are welcome! Here's how:
 
-1. **Fork the Repository**
-   - Create your feature branch (`git checkout -b feature/AmazingFeature`)
-   - Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-   - Push to the branch (`git push origin feature/AmazingFeature`)
-   - Open a Pull Request
+1. **Fork and Clone**
+   ```bash
+   git checkout -b feature/NewFeature
+   git commit -m 'Add NewFeature'
+   git push origin feature/NewFeature
+   ```
+   Then open a Pull Request
 
 2. **Coding Standards**
-   - Follow the existing code style
-   - Write meaningful commit messages
-   - Add appropriate documentation
-   - Test your changes thoroughly
+   - Follow Rust best practices
+   - Maintain consistent code style
+   - Include appropriate error handling
+   - Add unit tests for new features
 
 3. **Bug Reports**
-   - Use the issue tracker
-   - Provide detailed reproduction steps
+   - Use GitHub Issues
    - Include system specifications
+   - Provide clear reproduction steps
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## 🙏 Acknowledgments
+## 🛡️ Security Features
 
-- Tauri Team for the amazing framework
-- React community for the robust ecosystem
-- All contributors who have helped shape this project
+- Memory-safe Rust implementation
+- Secure privilege elevation
+- Protected system calls
+- Error boundary handling
 
-## 🔐 Security
+## 🔧 Technical Details
 
-- Always run the application with appropriate permissions
-- Review the code before running on production systems
-- Report security vulnerabilities responsibly
+### Power Management Features
+```rust
+pub enum BoostMode {
+    Disabled = 0,
+    Enabled = 1,
+    Aggressive = 2,
+    EfficientEnabled = 3,
+    EfficientAggressive = 4,
+    AggressiveAtGuaranteed = 5,
+    EfficientAggressiveAtGuaranteed = 6,
+}
+```
+
+### System Requirements
+- Windows 10/11
+- x64 architecture
+- 2GB RAM minimum
+- Administrative privileges
 
 ## 📞 Contact
 
-- Project Link: [https://github.com/cloaky233/GameBoy](https://github.com/cloaky233/GameBoy)
-- Discord: [Join our community](#) (will update link soon)
+- GitHub Issues: [Report a bug](https://github.com/cloaky233/GameBoy/issues)
+- Discord: [Join our community](#) (coming soon)
 
 ---
 
-<p align="center">Made with ❤️ by CLoaK</p>
+<p align="center">
+Made with ❤️ by CLoaK | Powered by Rust and Tauri
+</p>
+
+*Note: This project now uses pure Rust implementation for enhanced performance and security.*
