@@ -1,16 +1,13 @@
-// src-tauri/src/lib.rs
-mod commands;
-mod models;
-mod services;
-mod utils;
+mod power_manager;
+mod system_monitor;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            commands::get_system_stats,
-            commands::switcher
+            power_manager::switcher,
+            system_monitor::get_system_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
