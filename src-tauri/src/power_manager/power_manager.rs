@@ -31,6 +31,75 @@ pub fn is_admin() -> bool {
 }
 
 #[tauri::command]
+pub async fn get_current_settings() -> Result<HashMap<String, i32>, String> {
+    if !is_admin() {
+        return Err("❌ Administrator privileges required to read settings".to_string());
+    }
+
+    let mut settings = HashMap::new();
+    let scheme_guid = get_active_scheme()?;
+
+    // Constants for GUIDs
+    const PROCESSOR_SUBGROUP: &str = "54533251-82be-4824-96c1-47b60b740d00";
+    const BOOST_GUID: &str = "be337238-0d82-4146-a960-4f3749d470c7";
+    const MAX_PROC_GUID: &str = "bc5038f7-23e0-4960-96da-33abaf5935ec";
+
+    // Get boost mode settings
+    let output = Command::new("powercfg")
+        .args(&["/query", &scheme_guid, PROCESSOR_SUBGROUP, BOOST_GUID])
+        .output()
+        .map_err(|e| format!("❌ Failed to get boost mode: {}", e))?;
+
+    let output_str = String::from_utf8_lossy(&output.stdout);
+
+    // Parse boost mode settings
+    settings.insert(
+        "acBoostMode".to_string(),
+        parse_powercfg_output(&output_str, "AC").unwrap_or(1),
+    );
+    settings.insert(
+        "dcBoostMode".to_string(),
+        parse_powercfg_output(&output_str, "DC").unwrap_or(1),
+    );
+
+    // Get processor state settings
+    let output = Command::new("powercfg")
+        .args(&["/query", &scheme_guid, PROCESSOR_SUBGROUP, MAX_PROC_GUID])
+        .output()
+        .map_err(|e| format!("❌ Failed to get processor state: {}", e))?;
+
+    let output_str = String::from_utf8_lossy(&output.stdout);
+
+    // Parse processor state settings (convert from hex percentage)
+    settings.insert(
+        "acMaxProcessorState".to_string(),
+        parse_powercfg_output(&output_str, "AC").unwrap_or(100),
+    );
+    settings.insert(
+        "dcMaxProcessorState".to_string(),
+        parse_powercfg_output(&output_str, "DC").unwrap_or(100),
+    );
+
+    // println!("Parsed settings: {:?}", settings);
+    Ok(settings)
+}
+
+fn parse_powercfg_output(output: &str, power_type: &str) -> Option<i32> {
+    for line in output.lines() {
+        if line.contains(&format!("Current {} Power Setting Index:", power_type)) {
+            // Extract the hex value
+            if let Some(hex_str) = line.split("0x").nth(1) {
+                // Convert hex to decimal
+                if let Ok(value) = i32::from_str_radix(hex_str.trim(), 16) {
+                    return Some(value);
+                }
+            }
+        }
+    }
+    None
+}
+
+#[tauri::command]
 pub async fn switcher(
     boost_mode: String,
     max_processor_state: String,

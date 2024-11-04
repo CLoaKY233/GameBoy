@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    chillmaster_lib::run()
+    grimoire_desktop::run()
 }
