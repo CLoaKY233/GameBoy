@@ -1,7 +1,7 @@
-# Boostify - Advanced System Power Optimization
+# Grimoire - Advanced System Optimization Suite
 
 <p align="center">
-  <img src="src-tauri\icons\Square310x310Logo.png" alt="Boostify Logo" width="200"/>
+  <img src="src-tauri\icons\Square310x310Logo.png" alt="Grimoire Logo" width="200"/>
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,16 +9,30 @@
 [![Rust](https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 
-Boostify is a high-performance desktop application built with Tauri and Rust that provides precise control over system power management and processor optimization settings. The application leverages native Windows power management capabilities through direct Rust implementation.
+Grimoire is a comprehensive system optimization suite built with Tauri and Rust, offering advanced system monitoring, power management, and performance optimization capabilities. With its sleek purple-themed interface and powerful features, Grimoire provides complete control over your system's performance.
 
-## 🚀 Features
+## 🌟 Key Features
 
-- **Native Power Management**: Pure Rust implementation for system power control
-- **Processor Optimization**: Advanced boost mode management
-- **Dual Power Profiles**: Seamless AC/DC power mode switching
-- **Secure Operations**: Native privilege elevation handling
-- **Modern Interface**: React-based UI with real-time feedback
-- **Performance Focused**: Low resource footprint with Rust backend
+- **System Monitoring**
+  - Real-time CPU & GPU tracking
+  - Memory usage analytics
+  - Network activity monitoring
+  - Disk performance metrics
+  
+- **Power Management**
+  - Native Rust implementation
+  - Advanced boost mode control
+  - Dual power profile switching
+  
+- **Performance Analytics**
+  - Interactive performance graphs
+  - Real-time system statistics
+  - Resource utilization tracking
+  
+- **Modern Interface**
+  - Sleek purple-themed design
+  - Interactive dashboard
+  - Real-time feedback
 
 ## 🛠️ Technology Stack
 
@@ -26,8 +40,9 @@ Boostify is a high-performance desktop application built with Tauri and Rust tha
 - **Frontend**: React, Vite, TailwindCSS
 - **UI Framework**: ShadcnUI
 - **Animations**: Framer Motion
-- **Styling**: TailwindCSS
+- **Styling**: TailwindCSS + Custom Purple Theme
 - **State Management**: React Hooks
+- **Monitoring**: Native System Integration
 
 ## 📋 Prerequisites
 
@@ -65,20 +80,25 @@ Built artifacts will be available in `src-tauri/target/release/bundle/`.
 
 ## 🎯 Roadmap
 
-- [ ] **Enhanced Power Profiles**
-  - Custom power scheme creation
-  - Temperature-based optimization
-  - Automated profile switching
+- [ ] **Advanced System Analytics**
+  - AI-powered system analysis
+  - Comprehensive benchmarking
+  - System health monitoring
+  
+- [ ] **Cloud Integration**
+  - User account system
+  - Web dashboard access
+  - Configuration sync
+  
+- [ ] **Performance Features**
+  - Custom performance presets
+  - Advanced system tweaking
+  - Automated optimization
 
-- [ ] **Performance Analytics**
-  - Real-time power consumption monitoring
-  - System performance metrics
-  - Temperature tracking
-
-- [ ] **Advanced Features**
-  - Multiple power scheme management
-  - Scheduled profile switching
-  - Export/Import configurations
+- [ ] **Monitoring Expansion**
+  - Detailed benchmark reports
+  - Live web analytics
+  - Advanced health diagnostics
 
 ## 🤝 Contributing
 
@@ -103,29 +123,27 @@ Contributions are welcome! Here's how:
    - Include system specifications
    - Provide clear reproduction steps
 
-## 📝 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+## 🔮 Coming Soon
 
-## 🛡️ Security Features
+- Custom performance presets
+- Advanced settings configuration
+- Web platform integration
+- AI analysis and benchmarking
+- System health optimization
+- Live analytics dashboard
+- Detailed performance reports
 
-- Memory-safe Rust implementation
-- Secure privilege elevation
-- Protected system calls
-- Error boundary handling
+## 🛡️ Technical Features
 
-## 🔧 Technical Details
-
-### Power Management Features
+### System Monitoring Capabilities
 ```rust
-pub enum BoostMode {
-    Disabled = 0,
-    Enabled = 1,
-    Aggressive = 2,
-    EfficientEnabled = 3,
-    EfficientAggressive = 4,
-    AggressiveAtGuaranteed = 5,
-    EfficientAggressiveAtGuaranteed = 6,
+pub enum MonitoringFeatures {
+    CPUStats,
+    GPUMetrics,
+    MemoryAnalytics,
+    NetworkTracking,
+    DiskPerformance,
 }
 ```
 
@@ -133,6 +151,7 @@ pub enum BoostMode {
 - Windows 10/11
 - x64 architecture
 - 2GB RAM minimum
+- 50MB disk space
 - Administrative privileges
 
 ## 📞 Contact
@@ -140,10 +159,11 @@ pub enum BoostMode {
 - GitHub Issues: [Report a bug](https://github.com/cloaky233/GameBoy/issues)
 - Discord: [Join our community](#) (coming soon)
 
+
 ---
 
 <p align="center">
-Made with ❤️ by CLoaK | Powered by Rust and Tauri
+Made with 💜 by CLoaK | Powered by Rust and Tauri
 </p>
 
-*Note: This project now uses pure Rust implementation for enhanced performance and security.*
+*Note: Grimoire represents the evolution of Boostify, bringing enhanced monitoring capabilities and a more comprehensive optimization suite.*
