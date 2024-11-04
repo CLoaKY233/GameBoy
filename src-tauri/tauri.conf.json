@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "boostify",
+  "productName": "Grimoire Spellbook",
   "version": "2.0.0",
   "identifier": "Grimoire",
   "build": {
@@ -13,11 +13,11 @@
     "windows": [
       {
         "title": "Grimoire Spellbook",
-        "width": 1920,
-        "height": 1080,
+        "width": 1600,
+        "height": 900,
         "resizable": true,
         "fullscreen": false,
-        "minimizable": false
+        "minimizable": true
       }
     ],
     "security": {

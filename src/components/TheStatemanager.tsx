@@ -3,8 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Progress } from "@/components/ui/progress";
-// import { listen } from "@tauri-apps/api/event";
 import {
   Cpu,
   Zap,
@@ -39,7 +37,7 @@ const initialState = {
   powerMode: "AC" as PowerMode,
 };
 
-export default function WitchySystemOptimizer() {
+export default function GrimoireSystemOptimizer() {
   const [boostMode, setBoostMode] = useState<number>(initialState.boostMode);
   const [maxProcessorState, setMaxProcessorState] = useState<number>(
     initialState.maxProcessorState,
@@ -55,13 +53,13 @@ export default function WitchySystemOptimizer() {
   const [submissionResult, setSubmissionResult] =
     useState<SubmissionResult | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
+
   const fetchCurrentSettings = async () => {
     try {
       const settings = await invoke("get_current_settings");
       if (typeof settings === "object") {
         const settingsMap = settings as Record<string, number>;
 
-        // Update states based on power mode
         if (powerMode === "AC") {
           setCurrentBoostMode(
             settingsMap.acBoostMode ?? initialState.boostMode,
@@ -98,9 +96,8 @@ export default function WitchySystemOptimizer() {
   }, [submissionResult]);
 
   useEffect(() => {
-    // Initial fetch when component mounts
     fetchCurrentSettings();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   useEffect(() => {
     fetchCurrentSettings();
@@ -111,20 +108,6 @@ export default function WitchySystemOptimizer() {
       fetchCurrentSettings();
     }
   }, [submissionResult]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black text-purple-100 p-8 relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 bg-[url('/magic-bg.jpg')] bg-cover bg-center opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-purple-800/20 animate-pulse" />
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full"
-        />
-      </div>
-    );
-  }
 
   const handleSubmit = async () => {
     setIsOptimizing(true);
@@ -163,17 +146,31 @@ export default function WitchySystemOptimizer() {
     setSubmissionResult(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-purple-100 p-8 relative overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-[url('/magic-bg.jpg')] bg-cover bg-center opacity-5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/10 via-black to-purple-950/10 animate-pulse" />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-purple-100 p-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[url('/magic-bg.jpg')] bg-cover bg-center opacity-10" />
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-purple-800/20 animate-pulse" />
+      <div className="absolute inset-0 bg-[url('/magic-bg.jpg')] bg-cover bg-center opacity-5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-950/10 via-black to-purple-950/10 animate-pulse" />
 
       <div className="relative z-10 max-w-7xl mx-auto">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-4xl font-bold mb-8 text-center text-purple-200 tracking-wider"
+          className="text-4xl font-bold mb-8 text-center text-purple-300 tracking-wider"
         >
           Grimoire System Optimizer
         </motion.h1>
@@ -186,7 +183,7 @@ export default function WitchySystemOptimizer() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="bg-purple-900/30 backdrop-blur-md border-purple-500/50 shadow-lg hover:shadow-purple-500/30 transition-all duration-300">
+              <Card className="bg-purple-950/20 backdrop-blur-sm border-purple-800/30 shadow-lg hover:shadow-purple-800/20 transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-2xl font-semibold text-purple-300">
                     Boost Configuration
@@ -205,7 +202,7 @@ export default function WitchySystemOptimizer() {
                           className={`p-2 rounded-xl flex items-center justify-center text-sm ${
                             boostMode === mode.value
                               ? "bg-purple-600 text-white"
-                              : "bg-purple-900/50 text-purple-300"
+                              : "bg-purple-950/50 text-purple-300"
                           }`}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -222,23 +219,16 @@ export default function WitchySystemOptimizer() {
                       <Zap className="mr-2" size={18} />
                       Max Processor State: {maxProcessorState}%
                     </label>
-                    <div className="relative h-2 bg-purple-900/50 rounded-full overflow-hidden">
-                      <motion.div
-                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-600 to-blue-600"
-                        style={{ width: `${maxProcessorState}%` }}
-                        layout
-                      />
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={maxProcessorState}
-                        onChange={(e) =>
-                          setMaxProcessorState(Number(e.target.value))
-                        }
-                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                      />
-                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={maxProcessorState}
+                      onChange={(e) =>
+                        setMaxProcessorState(Number(e.target.value))
+                      }
+                      className="w-full mt-2 appearance-none bg-transparent [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-purple-950/50 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-purple-500"
+                    />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -250,7 +240,7 @@ export default function WitchySystemOptimizer() {
                       className={`w-16 h-8 rounded-full flex items-center ${
                         powerMode === "AC"
                           ? "bg-purple-600 justify-end"
-                          : "bg-purple-900/50 justify-start"
+                          : "bg-purple-950/50 justify-start"
                       }`}
                       onClick={() =>
                         setPowerMode(powerMode === "AC" ? "DC" : "AC")
@@ -270,7 +260,7 @@ export default function WitchySystemOptimizer() {
                         {powerMode === "AC" ? (
                           <Zap className="w-4 h-4 text-purple-600" />
                         ) : (
-                          <Battery className="w-4 h-4 text-purple-900" />
+                          <Battery className="w-4 h-4 text-purple-950" />
                         )}
                       </motion.div>
                     </motion.button>
@@ -285,14 +275,14 @@ export default function WitchySystemOptimizer() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3, delay: 0.1 }}
             >
-              <Card className="bg-purple-900/30 backdrop-blur-md border-purple-500/50 shadow-lg hover:shadow-purple-500/30 transition-all duration-300">
+              <Card className="bg-purple-950/20 backdrop-blur-sm border-purple-800/30 shadow-lg hover:shadow-purple-800/20 transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-2xl font-semibold text-purple-300">
                     System Status
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-4 rounded-lg bg-purple-900/50">
+                  <div className="p-4 rounded-lg bg-purple-950/30">
                     <p className="text-lg font-medium text-purple-300">
                       Current Boost Mode:{" "}
                       {
@@ -311,7 +301,7 @@ export default function WitchySystemOptimizer() {
                       </p>
                     )}
                   </div>
-                  <div className="p-4 rounded-lg bg-purple-900/50">
+                  <div className="p-4 rounded-lg bg-purple-950/30">
                     <p className="text-lg font-medium text-purple-300">
                       Current Max Processor State: {currentProcessorState}%
                     </p>
@@ -321,7 +311,7 @@ export default function WitchySystemOptimizer() {
                       </p>
                     )}
                   </div>
-                  <div className="p-4 rounded-lg bg-purple-900/50">
+                  <div className="p-4 rounded-lg bg-purple-950/30">
                     <p className="text-lg font-medium text-purple-300">
                       Power Mode: {powerMode}
                     </p>
@@ -329,10 +319,10 @@ export default function WitchySystemOptimizer() {
 
                   <div className="flex space-x-4 mt-6">
                     <motion.button
-                      className="flex-1 p-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold text-lg shadow-lg"
+                      className="flex-1 p-4 rounded-xl bg-gradient-to-r from-purple-800 to-blue-900 text-purple-100 font-bold text-lg shadow-lg"
                       whileHover={{
                         scale: 1.05,
-                        boxShadow: "0 0 20px rgba(167, 139, 250, 0.4)",
+                        boxShadow: "0 0 20px rgba(88, 28, 135, 0.4)",
                       }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleSubmit}
@@ -356,7 +346,7 @@ export default function WitchySystemOptimizer() {
                       )}
                     </motion.button>
                     <motion.button
-                      className="p-4 rounded-xl bg-purple-900/50 text-purple-300 font-bold text-lg shadow-lg"
+                      className="p-4 rounded-xl bg-purple-950/30 text-purple-400 font-bold text-lg shadow-lg"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleReset}
@@ -379,12 +369,12 @@ export default function WitchySystemOptimizer() {
             exit={{ opacity: 0, y: -20 }}
             className={`fixed bottom-8 right-8 p-6 rounded-xl z-30 ${
               submissionResult.status === "success"
-                ? "bg-green-800/80"
-                : "bg-red-800/80"
+                ? "bg-green-950/80"
+                : "bg-red-950/80"
             } border ${
               submissionResult.status === "success"
-                ? "border-green-400"
-                : "border-red-400"
+                ? "border-green-700"
+                : "border-red-700"
             } backdrop-blur-md shadow-lg`}
           >
             <div className="flex items-center">
