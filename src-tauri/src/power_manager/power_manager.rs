@@ -4,6 +4,12 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
+// Import Windows-specific traits and constants
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+#[cfg(windows)]
+use winapi::um::winbase::CREATE_NO_WINDOW;
+
 // Constants
 const PROCESSOR_SUBGROUP: &str = "54533251-82be-4824-96c1-47b60b740d00";
 const BOOST_GUID: &str = "be337238-0d82-4146-a960-4f3749d470c7";
@@ -31,10 +37,13 @@ pub fn is_admin() -> bool {
     if !cfg!(target_os = "windows") {
         return false;
     }
-    Command::new("net")
-        .args(["session"])
-        .output()
-        .map_or(false, |output| output.status.success())
+    let mut cmd = Command::new("net");
+    cmd.args(["session"]);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.output().map_or(false, |output| output.status.success())
 }
 
 fn parse_powercfg_output(output: &str, power_type: &str) -> Option<i32> {
@@ -53,8 +62,13 @@ fn get_active_scheme() -> Result<String, String> {
         }
     }
 
-    let output = Command::new("powercfg")
-        .args(&["/getactivescheme"])
+    let mut cmd = Command::new("powercfg");
+    cmd.args(&["/getactivescheme"]);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let output = cmd
         .output()
         .map_err(|e| format!("❌ Failed to get active scheme: {}", e))?;
 
@@ -119,8 +133,13 @@ pub async fn get_current_settings() -> Result<HashMap<String, i32>, String> {
 }
 
 fn query_power_settings(scheme_guid: &str, setting_guid: &str) -> Result<String, String> {
-    let output = Command::new("powercfg")
-        .args(&["/query", scheme_guid, PROCESSOR_SUBGROUP, setting_guid])
+    let mut cmd = Command::new("powercfg");
+    cmd.args(&["/query", scheme_guid, PROCESSOR_SUBGROUP, setting_guid]);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    let output = cmd
         .output()
         .map_err(|e| format!("❌ Failed to query power settings: {}", e))?;
 
@@ -191,9 +210,13 @@ pub async fn switcher(
         }
     }
 
-    Command::new("powercfg")
-        .args(&["/setactive", &scheme_guid])
-        .output()
+    let mut cmd = Command::new("powercfg");
+    cmd.args(&["/setactive", &scheme_guid]);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.output()
         .map_err(|e| format!("❌ Failed to apply changes: {}", e))?;
 
     // Clear caches
@@ -217,27 +240,35 @@ fn apply_power_settings(
     };
 
     // Set boost mode
-    Command::new("powercfg")
-        .args(&[
-            cmd_type,
-            scheme_guid,
-            PROCESSOR_SUBGROUP,
-            BOOST_GUID,
-            &boost_mode.to_string(),
-        ])
-        .output()
+    let mut cmd = Command::new("powercfg");
+    cmd.args(&[
+        cmd_type,
+        scheme_guid,
+        PROCESSOR_SUBGROUP,
+        BOOST_GUID,
+        &boost_mode.to_string(),
+    ]);
+    #[cfg(windows)]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.output()
         .map_err(|e| format!("❌ Failed to set boost mode: {}", e))?;
 
     // Set max processor state
-    Command::new("powercfg")
-        .args(&[
-            cmd_type,
-            scheme_guid,
-            PROCESSOR_SUBGROUP,
-            MAX_PROC_GUID,
-            &max_processor_state.to_string(),
-        ])
-        .output()
+    let mut cmd2 = Command::new("powercfg");
+    cmd2.args(&[
+        cmd_type,
+        scheme_guid,
+        PROCESSOR_SUBGROUP,
+        MAX_PROC_GUID,
+        &max_processor_state.to_string(),
+    ]);
+    #[cfg(windows)]
+    {
+        cmd2.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd2.output()
         .map_err(|e| format!("❌ Failed to set processor state: {}", e))?;
 
     Ok(())

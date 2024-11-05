@@ -26,6 +26,7 @@ lazy_static = "1.4.0"
 rayon = "1.7"
 parking_lot = "0.12"
 
+
 [features]
 default = ["nvidia-gpu"]
 nvidia-gpu = ["nvml-wrapper"]
