@@ -1,27 +1,36 @@
 use lazy_static::lazy_static;
 #[cfg(windows)]
 use nvml_wrapper::{enum_wrappers::device::TemperatureSensor, Nvml};
+use parking_lot::Mutex;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
-use std::time::Instant;
-use sysinfo::{CpuExt, DiskExt, NetworkExt, System, SystemExt};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+#[allow(unused_imports)]
+use sysinfo::{CpuExt, DiskExt, NetworkExt, Networks, NetworksExt, System, SystemExt};
+const CACHE_DURATION: Duration = Duration::from_millis(500);
 
 lazy_static! {
+    static ref SYSTEM: Arc<Mutex<System>> = Arc::new(Mutex::new(System::new_all()));
     static ref LAST_NETWORK_MEASURE: Mutex<Option<(Instant, u64, u64)>> = Mutex::new(None);
+    static ref CACHED_INFO: Mutex<Option<(SystemInfo, Instant)>> = Mutex::new(None);
+    #[cfg(windows)]
+    static ref NVML: Mutex<Option<Nvml>> = Mutex::new(Nvml::init().ok());
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SystemInfo {
     #[serde(rename = "cpuModel")]
     pub cpu_model: String,
     #[serde(rename = "cpuUsage")]
     pub cpu_usage: f32,
     #[serde(rename = "memoryTotal")]
-    pub memory_total: u64,
+    pub memory_total: u32,
     #[serde(rename = "memoryUsed")]
-    pub memory_used: u64,
+    pub memory_used: u32,
     #[serde(rename = "memoryAvailable")]
-    pub memory_available: u64,
+    pub memory_available: u32,
     #[serde(rename = "memoryUsage")]
     pub memory_usage: f32,
     #[serde(rename = "gpuModel")]
@@ -31,184 +40,177 @@ pub struct SystemInfo {
     #[serde(rename = "gpuUsage")]
     pub gpu_usage: f32,
     #[serde(rename = "gpuMemoryUsed")]
-    pub gpu_memory_used: u64,
+    pub gpu_memory_used: u32,
     #[serde(rename = "gpuMemoryTotal")]
-    pub gpu_memory_total: u64,
+    pub gpu_memory_total: u32,
     #[serde(rename = "networkUpSpeed")]
-    pub network_up_speed: u64,
+    pub network_up_speed: u32,
     #[serde(rename = "networkDownSpeed")]
-    pub network_down_speed: u64,
+    pub network_down_speed: u32,
     #[serde(rename = "diskTotal")]
-    pub disk_total: u64,
+    pub disk_total: u32,
     #[serde(rename = "diskUsed")]
-    pub disk_used: u64,
+    pub disk_used: u32,
     #[serde(rename = "diskFree")]
-    pub disk_free: u64,
+    pub disk_free: u32,
     #[serde(rename = "diskUsage")]
     pub disk_usage: f32,
 }
 
 #[tauri::command]
 pub fn get_system_stats() -> Result<SystemInfo, String> {
-    let mut sys = System::new_all();
+    if let Some((info, timestamp)) = CACHED_INFO.lock().as_ref() {
+        if timestamp.elapsed() < CACHE_DURATION {
+            return Ok(info.clone());
+        }
+    }
+
+    let mut sys = SYSTEM.lock();
     sys.refresh_all();
-    sys.refresh_networks_list();
-    sys.refresh_networks();
-    sys.refresh_disks();
 
-    #[cfg(windows)]
-    let nvml = Nvml::init().ok();
+    // Using nested joins for more than 2 parallel tasks
+    let ((cpu_stats, memory_stats), (disk_stats, (gpu_stats, network_stats))) = rayon::join(
+        || rayon::join(|| get_cpu_stats(&sys), || get_memory_stats(&sys)),
+        || {
+            rayon::join(
+                || get_disk_stats(&sys),
+                || rayon::join(|| get_gpu_stats(), || get_network_stats(&sys)),
+            )
+        },
+    );
 
+    let info = SystemInfo {
+        cpu_model: cpu_stats.0,
+        cpu_usage: cpu_stats.1,
+        memory_total: memory_stats.0,
+        memory_used: memory_stats.1,
+        memory_available: memory_stats.2,
+        memory_usage: memory_stats.3,
+        gpu_model: gpu_stats.0,
+        gpu_temperature: gpu_stats.1,
+        gpu_usage: gpu_stats.2,
+        gpu_memory_used: gpu_stats.3,
+        gpu_memory_total: gpu_stats.4,
+        network_up_speed: network_stats.0,
+        network_down_speed: network_stats.1,
+        disk_total: disk_stats.0,
+        disk_used: disk_stats.1,
+        disk_free: disk_stats.2,
+        disk_usage: disk_stats.3,
+    };
+
+    *CACHED_INFO.lock() = Some((info.clone(), Instant::now()));
+    Ok(info)
+}
+
+fn get_cpu_stats(sys: &System) -> (String, f32) {
     let cpu_model = sys
         .cpus()
         .first()
         .map(|cpu| cpu.brand().to_string())
         .unwrap_or_else(|| "Unknown".to_string());
 
-    let cpu_usage =
-        sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum::<f32>() / sys.cpus().len() as f32;
+    let cpu_usage = sys
+        .cpus()
+        .par_iter()
+        .map(|cpu| cpu.cpu_usage())
+        .sum::<f32>()
+        / sys.cpus().len() as f32;
 
-    let memory_total = sys.total_memory() / 1024 / 1024;
-    let memory_used = sys.used_memory() / 1024 / 1024;
-    let memory_available = sys.available_memory() / 1024 / 1024;
-    let memory_usage = (memory_used as f32 / memory_total as f32) * 100.0;
-    #[allow(unused_assignments)]
-    let (mut total_space, mut used_space, mut free_space) = (0, 0, 0);
-    for disk in sys.disks() {
-        total_space += disk.total_space();
-        free_space += disk.available_space();
-    }
-    used_space = total_space - free_space;
+    (cpu_model, cpu_usage)
+}
 
-    let disk_total = total_space / 1024 / 1024 / 1024;
-    let disk_used = used_space / 1024 / 1024 / 1024;
-    let disk_free = free_space / 1024 / 1024 / 1024;
-    let disk_usage = if disk_total > 0 {
-        (disk_used as f32 / disk_total as f32) * 100.0
+fn get_memory_stats(sys: &System) -> (u32, u32, u32, f32) {
+    let total = (sys.total_memory() / 1024 / 1024) as u32;
+    let used = (sys.used_memory() / 1024 / 1024) as u32;
+    let available = (sys.available_memory() / 1024 / 1024) as u32;
+    let usage = (used as f32 / total as f32) * 100.0;
+
+    (total, used, available, usage)
+}
+
+fn get_disk_stats(sys: &System) -> (u32, u32, u32, f32) {
+    let total = AtomicU64::new(0);
+    let free = AtomicU64::new(0);
+
+    sys.disks().par_iter().for_each(|disk| {
+        total.fetch_add(disk.total_space(), Ordering::Relaxed);
+        free.fetch_add(disk.available_space(), Ordering::Relaxed);
+    });
+
+    let total_bytes = total.load(Ordering::Relaxed);
+    let free_bytes = free.load(Ordering::Relaxed);
+    let used_bytes = total_bytes.saturating_sub(free_bytes);
+
+    let total_gb = (total_bytes / 1024 / 1024 / 1024) as u32;
+    let used_gb = (used_bytes / 1024 / 1024 / 1024) as u32;
+    let free_gb = (free_bytes / 1024 / 1024 / 1024) as u32;
+    let usage = if total_gb > 0 {
+        (used_gb as f32 / total_gb as f32) * 100.0
     } else {
         0.0
     };
 
-    // Network speed calculation
-    // Network speed calculation
-    let (network_down_speed, network_up_speed) = {
-        let mut last_measure = LAST_NETWORK_MEASURE.lock().unwrap();
-        let now = Instant::now();
+    (total_gb, used_gb, free_gb, usage)
+}
 
-        let mut current_rx = 0u64;
-        let mut current_tx = 0u64;
+fn get_network_stats(sys: &System) -> (u32, u32) {
+    let mut last_measure = LAST_NETWORK_MEASURE.lock();
+    let now = Instant::now();
 
-        // Get current network stats
-        for (_, data) in sys.networks() {
-            current_rx += data.received();
-            current_tx += data.transmitted();
-        }
+    let (current_rx, current_tx) = sys
+        .networks()
+        .into_iter() // Use into_iter() for Networks
+        .fold((0u64, 0u64), |(rx, tx), (_name, data)| {
+            (rx + data.received(), tx + data.transmitted())
+        });
 
-        // Calculate speeds with higher precision
-        let (down_speed, up_speed) = if let Some((last_time, last_rx, last_tx)) = *last_measure {
-            let duration = now.duration_since(last_time).as_secs_f64();
-            if duration > 0.0 {
-                // Calculate bytes per second first
-                let down_bps = (current_rx.saturating_sub(last_rx)) as f64 / duration;
-                let up_bps = (current_tx.saturating_sub(last_tx)) as f64 / duration;
-
-                // Convert to KB/s with higher precision
-                (down_bps / 1024.0, up_bps / 1024.0)
-            } else {
-                (0.0, 0.0)
-            }
+    let (down_speed, up_speed) = if let Some((last_time, last_rx, last_tx)) = *last_measure {
+        let duration = now.duration_since(last_time).as_secs_f64();
+        if duration > 0.0 {
+            let down = ((current_rx.saturating_sub(last_rx)) as f64 / duration / 1024.0) as u32;
+            let up = ((current_tx.saturating_sub(last_tx)) as f64 / duration / 1024.0) as u32;
+            (down, up)
         } else {
-            (0.0, 0.0)
-        };
-
-        // Update last measure
-        *last_measure = Some((now, current_rx, current_tx));
-
-        // Debug prints with more detailed information
-        // println!("Timestamp: {:?}", now.elapsed());
-        // println!("Network Stats:");
-        // println!(
-        //     "  RX: {} bytes ({})",
-        //     current_rx,
-        //     if current_rx >= 1024 * 1024 {
-        //         format!("{:.2} MB", current_rx as f64 / 1024.0 / 1024.0)
-        //     } else {
-        //         format!("{:.2} KB", current_rx as f64 / 1024.0)
-        //     }
-        // );
-        // println!(
-        //     "  TX: {} bytes ({})",
-        //     current_tx,
-        //     if current_tx >= 1024 * 1024 {
-        //         format!("{:.2} MB", current_tx as f64 / 1024.0 / 1024.0)
-        //     } else {
-        //         format!("{:.2} KB", current_tx as f64 / 1024.0)
-        //     }
-        // );
-        // println!("Speeds:");
-        // println!(
-        //     "  Download: {:.2} KB/s ({:.2} MB/s)",
-        //     down_speed,
-        //     down_speed / 1024.0
-        // );
-        // println!(
-        //     "  Upload: {:.2} KB/s ({:.2} MB/s)",
-        //     up_speed,
-        //     up_speed / 1024.0
-        // );
-
-        // Return speeds in KB/s
-        (down_speed as u64, up_speed as u64)
+            (0, 0)
+        }
+    } else {
+        (0, 0)
     };
 
-    #[cfg(windows)]
-    let (gpu_model, gpu_temperature, gpu_usage, gpu_memory_used, gpu_memory_total) =
-        if let Some(nvml) = &nvml {
-            if let Ok(device) = nvml.device_by_index(0) {
-                (
-                    device.name().unwrap_or_else(|_| "Unknown".to_string()),
-                    device.temperature(TemperatureSensor::Gpu).unwrap_or(0) as f32,
-                    device
-                        .utilization_rates()
-                        .map(|u| u.gpu as f32)
-                        .unwrap_or(0.0),
-                    device
-                        .memory_info()
-                        .map(|mem| mem.used / 1024 / 1024)
-                        .unwrap_or(0),
-                    device
-                        .memory_info()
-                        .map(|mem| mem.total / 1024 / 1024)
-                        .unwrap_or(0),
-                )
-            } else {
-                ("Unknown".to_string(), 0.0, 0.0, 0, 0)
-            }
-        } else {
-            ("No NVIDIA GPU detected".to_string(), 0.0, 0.0, 0, 0)
-        };
+    *last_measure = Some((now, current_rx, current_tx));
+    (down_speed, up_speed)
+}
 
-    #[cfg(not(windows))]
-    let (gpu_model, gpu_temperature, gpu_usage, gpu_memory_used, gpu_memory_total) =
-        ("N/A".to_string(), 0.0, 0.0, 0, 0);
+#[cfg(windows)]
+fn get_gpu_stats() -> (String, f32, f32, u32, u32) {
+    if let Some(nvml) = &*NVML.lock() {
+        if let Ok(device) = nvml.device_by_index(0) {
+            return (
+                device.name().unwrap_or_else(|_| "Unknown".to_string()),
+                device
+                    .temperature(TemperatureSensor::Gpu)
+                    .map(|t| t as f32)
+                    .unwrap_or(0.0),
+                device
+                    .utilization_rates()
+                    .map(|u| u.gpu as f32)
+                    .unwrap_or(0.0),
+                (device
+                    .memory_info()
+                    .map(|m| m.used / 1024 / 1024)
+                    .unwrap_or(0)) as u32,
+                (device
+                    .memory_info()
+                    .map(|m| m.total / 1024 / 1024)
+                    .unwrap_or(0)) as u32,
+            );
+        }
+    }
+    ("No NVIDIA GPU detected".to_string(), 0.0, 0.0, 0, 0)
+}
 
-    Ok(SystemInfo {
-        cpu_model,
-        cpu_usage,
-        memory_total,
-        memory_used,
-        memory_available,
-        memory_usage,
-        gpu_model,
-        gpu_temperature,
-        gpu_usage,
-        gpu_memory_used,
-        gpu_memory_total,
-        network_up_speed,
-        network_down_speed,
-        disk_total,
-        disk_used,
-        disk_free,
-        disk_usage,
-    })
+#[cfg(not(windows))]
+fn get_gpu_stats() -> (String, f32, f32, u32, u32) {
+    ("N/A".to_string(), 0.0, 0.0, 0, 0)
 }

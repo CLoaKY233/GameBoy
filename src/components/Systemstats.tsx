@@ -214,7 +214,7 @@ export default function GrimoireSystemMonitor() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-purple-100 p-8 relative overflow-hidden">
+    <div className="max-h-fit bg-black text-purple-100 p-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/magic-bg.jpg')] bg-cover bg-center opacity-5" />
       <div className="absolute inset-0 bg-gradient-to-br from-purple-950/10 via-black to-purple-950/10 animate-pulse" />
       <div className="relative z-10 max-w-7xl mx-auto">

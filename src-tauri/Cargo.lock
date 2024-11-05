@@ -10,6 +10,8 @@ dependencies = [
  "crossterm",
  "lazy_static",
  "nvml-wrapper",
+ "parking_lot",
+ "rayon",
  "serde",
  "serde_json",
  "sysinfo",
