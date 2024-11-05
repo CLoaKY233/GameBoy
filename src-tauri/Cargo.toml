@@ -3,7 +3,7 @@ name = "Grimoire"
 version = "2.0.1"
 description = "Built For Performance!"
 authors = ["you"]
-edition = "2024"
+edition = "2021"
 
 [lib]
 name = "grimoire_desktop"
