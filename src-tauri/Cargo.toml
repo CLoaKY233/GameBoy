@@ -1,9 +1,9 @@
 [package]
 name = "Grimoire"
-version = "2.0.0"
+version = "2.0.1"
 description = "Built For Performance!"
 authors = ["you"]
-edition = "2021"
+edition = "2024"
 
 [lib]
 name = "grimoire_desktop"
